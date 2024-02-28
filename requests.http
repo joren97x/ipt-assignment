@@ -1,0 +1,29 @@
+### murag postman pero naa ra sa VS Code
+
+### to run this requests, install REST Client in VS Code extensions
+### create a user
+POST http://localhost:3000/users
+Content-Type: application/json
+
+{
+    "username": "king henry",
+    "email": "king@email.com"
+}
+
+### update user
+PUT http://localhost:3000/users/3
+Content-Type: application/json
+
+{
+    "email": "brent@faiyaz.com"
+}
+
+### delete user
+DELETE http://localhost:3000/users/3
+
+### get user by id
+GET http://localhost:3000/users/11
+
+
+### get all the users
+GET http://localhost:3000/users
