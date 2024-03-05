@@ -24,9 +24,16 @@ connection.connect((err) => {
 });
 
 app.post('/users', (req, res) => {
-    connection.query('INSERT INTO users SET ?', [req.body], (err, result) => {
-        if(err) throw err;
-        console.log('User added', result.insertId);
+
+    const newUser = req.body;
+
+    connection.query('INSERT INTO users SET ?', newUser, (err, result) => {
+        if(err) {
+            res.json({ message: 'Server error', errorCode: 0 });
+        }
+        else {
+            res.json({ message: 'User created successfully', errorCode: 1 })
+        }
     })
 })
 
@@ -36,8 +43,17 @@ app.put('/users/:id', (req, res) => {
     const updatedEmail = req.body.email
 
     connection.query('UPDATE users SET email = ? WHERE id = ?', [updatedEmail, userId], (err, result) => {
-        if(err) throw err;
-        console.log('User updated', result.affectedRows);
+        if(err) {
+            res.json({ message: 'Server error', errorCode: 0 });
+        }
+        else {
+            if(result.affectedRows < 1) {
+                res.json({ message: 'User was not found or user was not updated', errorCode: 2 })
+            }
+            else {
+                res.json({ message: 'User updated successfully', errorCode: 1 })
+            }
+        }
     });
 })
 
@@ -45,16 +61,29 @@ app.delete('/users/:id', (req, res) => {
 
     const userId = req.params.id;
 
-    connection.query('DELETE FROM users WHERE id = ?', [userId], (err, result) => {
-        if(err) throw err;
-        console.log('User deleted', result.affectedRows);
+    connection.query('DELETE FROM users WHERE id = ?', userId, (err, result) => {
+        if(err) {
+            res.json({ message: 'Server error', errorCode: 0 });
+        }
+        else {
+            if(result.affectedRows < 1) {
+                res.json({ message: 'User was not deleted or user was not found', errorCode: 2 })
+            }
+            else {
+                res.json({ message: 'User deleted successfully', errorCode: 1 })
+            }
+        }
     });
 });
 
 app.get('/users', (req, res) => {
-    connection.query('SELECT * FROM users', [], (err, result) => {
-        if(err) throw err;
-        res.json(result);
+    connection.query('SELECT * FROM users', (err, result) => {
+        if(err) {
+            res.json({ message: 'Server error', errorCode: 0 });
+        }
+        else {
+            res.json(result)
+        }
     })
 })
 
@@ -62,9 +91,19 @@ app.get('/users/:id', (req, res) => {
 
     const userId = req.params.id;
 
-    connection.query('SELECT * FROM users WHERE id = ?', [userId], (err, result) => {
-        if(err) throw err;
-        console.log(result);
+    connection.query('SELECT * FROM users WHERE id = ?', userId, (err, result) => {
+        
+        if(err) {
+            res.json({ message: 'Server error', errorCode: 0 });
+        }
+        else {
+            if(result.length < 1) {
+                res.json({ message: "No user found", errorCode: 404 })
+            }
+            else {
+                res.json(result)
+            }
+        }
     })
 })
 
