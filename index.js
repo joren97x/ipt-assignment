@@ -2,6 +2,9 @@ const express = require('express');
 const mysql2 = require('mysql2');
 const port = 3000;
 const app = express()
+const jwt = require('jsonwebtoken')
+const bcrypt = require('bcrypt')
+const saltRounds = 10
 app.use(express.json())
 app.listen(port, () => {
     console.log(`Server listening at port ${port}.`)
@@ -22,6 +25,50 @@ connection.connect((err) => {
         console.log('Connected to MySQL database');
     }
 });
+
+app.post('/login', (req, res) => {
+
+    const { username, password } = req.body
+
+    connection.query('SELECT * FROM users where username = ?', username, async (err, result) => {
+        if(err) {
+            return res.status(500).json({ message: "Internal Server error" })
+        }
+
+        if( result.length === 0) {
+            return res.status(401).json({ message: "Invalid credentials" })
+        }
+
+        const user = result[0]
+
+        const passwordMatch = await bcrypt.compare(password, user.password)
+
+        if(!passwordMatch) {
+            return res.status(401).json({ message: "Invalid credentials" })
+        }
+
+        const token = jwt.sign({ user }, 'token')
+        res.json({token})
+
+    })
+
+})
+
+app.post('/register', async (req, res) => {
+
+    const { username, password } = req.body
+    const hashedPassword = await bcrypt.hash(password, saltRounds)
+
+    connection.query('INSERT INTO users SET username = ?, password = ?', [username, hashedPassword], (err, result) => {
+        if(err) {
+            return res.status(500).json({ message: "Internal Server error" })
+        }
+
+        res.json({ message: "User created successfully" })
+
+    })
+
+})
 
 app.post('/users', (req, res) => {
 
@@ -76,7 +123,7 @@ app.delete('/users/:id', (req, res) => {
     });
 });
 
-app.get('/users', (req, res) => {
+app.get('/users', verifyToken, (req, res) => {
     connection.query('SELECT * FROM users', (err, result) => {
         if(err) {
             res.json({ message: 'Server error', errorCode: 0 });
@@ -107,7 +154,6 @@ app.get('/users/:id', (req, res) => {
     })
 })
 
-//close the connection kono
 function closeConnection() {
     connection.end((err) => {
         if(err) {
@@ -117,6 +163,24 @@ function closeConnection() {
             console.log('MYSQL connection closed');
         }
     })
+}
+
+function verifyToken(req, res, next) {
+    const authHeader = req.headers['authorization']
+    if(!authHeader) {
+        return res.json({ message: "Token not provided tanga" })
+    }
+    const token = authHeader.split(' ')[1]
+    
+
+    jwt.verify(token, 'token', (err, decoded) => {
+        if(err) {
+            return res.status(401).json({ error: "Invalid token bai" })
+        }
+        req.user = decoded
+        next()
+    })
+
 }
 
 
