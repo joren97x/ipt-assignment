@@ -70,7 +70,7 @@ app.post('/register', async (req, res) => {
 
 })
 
-app.post('/users', (req, res) => {
+app.post('/users', verifyToken, (req, res) => {
 
     const newUser = req.body;
 
@@ -84,7 +84,7 @@ app.post('/users', (req, res) => {
     })
 })
 
-app.put('/users/:id', (req, res) => {
+app.put('/users/:id', verifyToken, (req, res) => {
 
     const userId = req.params.id;
     const updatedEmail = req.body.email
@@ -104,7 +104,7 @@ app.put('/users/:id', (req, res) => {
     });
 })
 
-app.delete('/users/:id', (req, res) => {
+app.delete('/users/:id', verifyToken, (req, res) => {
 
     const userId = req.params.id;
 
@@ -134,7 +134,7 @@ app.get('/users', verifyToken, (req, res) => {
     })
 })
 
-app.get('/users/:id', (req, res) => {
+app.get('/users/:id', verifyToken, (req, res) => {
 
     const userId = req.params.id;
 
